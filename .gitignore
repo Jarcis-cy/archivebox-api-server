@@ -1,0 +1,30 @@
+# Python 编译文件
+*.pyc
+__pycache__/
+
+# Django 环境变量文件
+.env
+
+# 数据库文件
+*.sqlite3
+
+# 静态文件
+staticfiles/
+media/
+
+# 本地配置文件
+local_settings.py
+api/test_script.py
+
+# 虚拟环境目录
+venv/
+env/
+
+# IDE 配置文件
+.idea/
+
+# Node.js 依赖项
+node_modules/
+
+# log 文件
+*.log
