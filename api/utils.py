@@ -70,17 +70,15 @@ def remove_protocol(url):
     return url
 
 
-def extract_status(log_segment):
-    return 'Failure' if 'Extractor failed' in log_segment else 'Success'
+def extract_archive_path(log_segment):
+    match = re.search(r'> (./archive/[^\s]+)', log_segment)
+    return match.group(1) if match else None
 
 
 def parse_log(log_text, total_links):
     stripped_links = [remove_protocol(link) for link in total_links]
 
-    result = {
-        'status': 'Success',
-        'links': []
-    }
+    result = []
 
     for link in stripped_links:
         pattern = re.compile(r'\[\+\] .*?"{}"\s+(https?://[^\s]+)'.format(re.escape(link)))
@@ -91,17 +89,13 @@ def parse_log(log_text, total_links):
             end_pos = log_text.find('\n[', start_pos)
             log_segment = log_text[start_pos:end_pos if end_pos != -1 else len(log_text)]
 
-            status = extract_status(log_segment)
+            archive_path = extract_archive_path(log_segment)
         else:
-            status = 'Unknown'
+            archive_path = None
 
-        result['links'].append({
+        result.append({
             'url': total_links[stripped_links.index(link)],
-            'status': status
+            'archive_path': archive_path
         })
-
-    if any(link['status'] == 'Failure' for link in result['links']):
-        result['status'] = 'Partial Success' if any(
-            link['status'] == 'Success' for link in result['links']) else 'Failure'
 
     return result

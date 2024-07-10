@@ -51,6 +51,7 @@ def initialize_archivebox():
     admin_username = os.getenv('ADMIN_USERNAME')
     admin_password = os.getenv('ADMIN_PASSWORD')
     archivebox_version = os.getenv('ARCHIVEBOX_VERSION')
+    deployment_ports = os.getenv('DEPLOYMENT_PORTS')
 
     if admin_username and admin_password:
         docker_compose['services']['archivebox']['environment'].append(f'ADMIN_USERNAME={admin_username}')
@@ -58,6 +59,9 @@ def initialize_archivebox():
 
     if archivebox_version:
         docker_compose['services']['archivebox']['image'] = f'archivebox/archivebox:{archivebox_version}'
+
+    if deployment_ports:
+        docker_compose['services']['archivebox']['ports'].append(deployment_ports)
 
     with open(docker_compose_path, 'w') as file:
         yaml.safe_dump(docker_compose, file)
@@ -74,3 +78,7 @@ def initialize_archivebox():
         return success_response("ArchiveBox server started successfully.")
     except subprocess.CalledProcessError as e:
         return error_response(f"Failed to start ArchiveBox server: {e}", error=e)
+
+
+def add_url(urls, tag, depth, update, update_all, overwrite, extractors, parser):
+    pass

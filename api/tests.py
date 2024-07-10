@@ -3,7 +3,8 @@ from unittest.mock import patch, MagicMock
 
 import requests
 
-from api.utils import check_docker_version, check_docker_compose, initialize_archivebox, parse_log
+from api.utils import check_docker_version, check_docker_compose, parse_log
+from api.service import initialize_archivebox
 
 
 class TestInitArchiveBox(unittest.TestCase):
@@ -367,55 +368,23 @@ class FormatOutputTest(unittest.TestCase):
 
     def test_single_target_success(self):
         targets = ["https://www.baidu.com/"]
-        expected_output = {
-            'links': [
-                {'status': 'Success', 'url': 'https://www.baidu.com/'}
-            ],
-            'status': 'Success'
-        }
+        expected_output = [{'url': 'https://www.baidu.com/', 'archive_path': './archive/1720073769.137125'}]
         result = parse_log(self.single_target_success, targets)
-        self.assertDictEqual(result, expected_output)
+        self.assertListEqual(result, expected_output)
 
     def test_multiple_targets_success(self):
         targets = ["https://cxsecurity.com/cveshow/CVE-2022-34593/", "https://github.com/Liyou-ZY/POC/issues/1"]
-        expected_output = {
-            'links': [
-                {'status': 'Success', 'url': 'https://cxsecurity.com/cveshow/CVE-2022-34593/'},
-                {'status': 'Success', 'url': 'https://github.com/Liyou-ZY/POC/issues/1'}
-            ],
-            'status': 'Success'
-        }
+        expected_output = [
+            {'url': 'https://cxsecurity.com/cveshow/CVE-2022-34593/', 'archive_path': './archive/1720074402.409496'},
+            {'url': 'https://github.com/Liyou-ZY/POC/issues/1', 'archive_path': './archive/1720074402.409769'}
+        ]
         result = parse_log(self.multiple_targets_success, targets)
-        self.assertDictEqual(result, expected_output)
-
-    def test_single_target_failure(self):
-        targets = ["https://asdjfhkawkisejuhdfcvhbiuewsa.com/"]
-        expected_output = {
-            'links': [
-                {'status': 'Failure', 'url': 'https://asdjfhkawkisejuhdfcvhbiuewsa.com/'}
-            ],
-            'status': 'Failure'
-        }
-        self.assertDictEqual(parse_log(self.single_target_failure, targets), expected_output)
-
-    def test_multiple_targets_failure(self):
-        targets = ["https://sfdgcxsecurityasdfawefwAed.com/", "https://afwegithubasdfasdfs.com/"]
-        expected_output = {
-            'links': [
-                {'status': 'Failure', 'url': 'https://sfdgcxsecurityasdfawefwAed.com/'},
-                {'status': 'Failure', 'url': 'https://afwegithubasdfasdfs.com/'}
-            ],
-            'status': 'Failure'
-        }
-        self.assertDictEqual(parse_log(self.multiple_targets_failure, targets), expected_output)
+        self.assertListEqual(result, expected_output)
 
     def test_mixed_targets(self):
         targets = ["https://docs.xray.cool", "https://asedfawecdwsac.caedws"]
-        expected_output = {
-            'links': [
-                {'status': 'Success', 'url': 'https://docs.xray.cool'},
-                {'status': 'Failure', 'url': 'https://asedfawecdwsac.caedws'}
-            ],
-            'status': 'Partial Success'
-        }
-        self.assertDictEqual(parse_log(self.mixed_targets, targets), expected_output)
+        expected_output = [
+            {'url': 'https://docs.xray.cool', 'archive_path': './archive/1720075521.41685'},
+            {'url': 'https://asedfawecdwsac.caedws', 'archive_path': './archive/1720075521.417146'}
+        ]
+        self.assertListEqual(parse_log(self.mixed_targets, targets), expected_output)
