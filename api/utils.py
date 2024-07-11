@@ -1,8 +1,8 @@
+import os
 import subprocess
 
 from dotenv import load_dotenv
 import re
-
 
 # 加载 .env 文件中的配置
 load_dotenv()
@@ -11,6 +11,15 @@ load_dotenv()
 def success_response(message, **data):
     response = {
         "status": "success",
+        "message": message
+    }
+    response.update(data)
+    return response
+
+
+def partial_success_response(message, **data):
+    response = {
+        "status": "partial_success",
         "message": message
     }
     response.update(data)
@@ -30,12 +39,14 @@ def error_response(message, error=None, **data):
 
 def execute_docker_compose_archivebox_command(command_args):
     """执行 Docker Compose ArchiveBox 命令并处理异常"""
+    project_dir = os.getenv('PROJECT_DIR')
     command = f"docker compose run archivebox {command_args}"
     try:
-        subprocess.run(command, shell=True, check=True)
-        return success_response(f"Command '{command}' executed successfully.")
+        result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, encoding='utf-8',
+                                stderr=subprocess.PIPE, text=True, cwd=project_dir)
+        return success_response(f"Command '{command}' executed successfully.", stdout=result.stdout)
     except subprocess.CalledProcessError as e:
-        return error_response(f"Failed to execute command '{command}': {e}", error=e)
+        return error_response(f"Failed to execute command '{command}': {e}", error=e, stderr=e.stderr)
 
 
 def check_docker_version():
@@ -99,3 +110,7 @@ def parse_log(log_text, total_links):
         })
 
     return result
+
+
+def clean_path(path):
+    return os.path.normpath(path).replace("\\", "/").replace("/./", "/")

@@ -8,6 +8,20 @@ from .serializers import AddUrlsSerializer
 from drf_yasg.utils import swagger_auto_schema
 
 
+@api_view(['GET'])
+def init_project(request):
+    if request.method == 'GET':
+        result = service.initialize_archivebox()
+
+        if result["status"] == "success":
+            return Response(result, status=status.HTTP_200_OK)
+        else:
+            return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return Response({'status': 'error', 'message': 'Invalid request method'},
+                        status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
 @swagger_auto_schema(method='post', request_body=AddUrlsSerializer)
 @api_view(['POST'])
 def add_urls(request):
@@ -24,9 +38,12 @@ def add_urls(request):
             extractors = data.get('extractors')
             parser = data.get('parser', 'auto')
 
-            service.add_url(urls, tag, depth, update, update_all, overwrite, extractors, parser)
+            result = service.add_url(urls, tag, depth, update, update_all, overwrite, extractors, parser)
 
-            return Response({'status': 'success'}, status=status.HTTP_200_OK)
+            if result["status"] == "success":
+                return Response(result, status=status.HTTP_200_OK)
+            else:
+                return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     else:

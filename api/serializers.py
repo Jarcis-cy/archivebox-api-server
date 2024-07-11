@@ -35,17 +35,29 @@ class AddUrlsSerializer(serializers.Serializer):
         required=False,
         help_text="从头开始重新存档 URL，覆盖任何现有文件。例如：--overwrite"
     )
-    extractors = serializers.ChoiceField(
+    extractors = serializers.ListField(
+        child=serializers.ChoiceField(choices=[
+            "title", "screenshot", "git", "favicon", "headers", "singlefile", "pdf", "dom", "wget", "readability",
+            "mercury", "htmltotext", "media", "archive_org"
+        ]),
         required=False,
-        allow_blank=True,
-        help_text="传递要使用的提取器列表，使用逗号分隔，例如：--extract=title,screenshot,git。如果不填写，默认抓取全部内容",
-        choices=["title", "screenshot", "git", "favicon", "headers", "singlefile", "pdf", "dom", "wget", "readability",
-                 "mercury", "htmltotext", "media", "archive_org"]
+        help_text="传递要使用的提取器列表，使用列表形式。例如：['title','screenshot','git']"
     )
-    parser = serializers.ChoiceField(
+    parser = serializers.ListField(
+        child=serializers.ChoiceField(
+            choices=['auto', 'pocket_api', 'readwise_reader_api', 'wallabag_atom', 'pocket_html', 'pinboard_rss',
+                     'shaarli_rss', 'medium_rss', 'netscape_html', 'rss', 'json', 'jsonl', 'html', 'txt', 'url_list']),
         required=False,
-        allow_blank=True,
         help_text="用于读取输入 URL 的解析器。例如：--parser=auto",
-        choices=['auto', 'pocket_api', 'readwise_reader_api', 'wallabag_atom', 'pocket_html', 'pinboard_rss',
-                 'shaarli_rss', 'medium_rss', 'netscape_html', 'rss', 'json', 'jsonl', 'html', 'txt', 'url_list']
     )
+
+    def validate_extractors(self, value):
+        if value:
+            return ",".join(value)
+        return ""
+
+    def validate_parser(self, value):
+        if value:
+            return ",".join(value)
+        return ""
+
