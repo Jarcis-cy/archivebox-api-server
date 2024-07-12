@@ -52,10 +52,14 @@ def initialize_archivebox():
     admin_password = os.getenv('ADMIN_PASSWORD')
     archivebox_version = os.getenv('ARCHIVEBOX_VERSION')
     deployment_ports = os.getenv('DEPLOYMENT_PORTS')
+    time_zones = os.getenv('TIME_ZONES')
 
     if admin_username and admin_password:
         docker_compose['services']['archivebox']['environment'].append(f'ADMIN_USERNAME={admin_username}')
         docker_compose['services']['archivebox']['environment'].append(f'ADMIN_PASSWORD={admin_password}')
+
+    if time_zones:
+        docker_compose['services']['archivebox']['environment'].append(f'TZ={time_zones}')
 
     if archivebox_version:
         docker_compose['services']['archivebox']['image'] = f'archivebox/archivebox:{archivebox_version}'
