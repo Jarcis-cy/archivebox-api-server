@@ -14,13 +14,12 @@ class Target(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     url = models.URLField(max_length=2000)
     domain = models.CharField(max_length=100)
-    timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.FloatField()
 
 
 class Result(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    pwd = models.CharField(max_length=200)
-    timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.FloatField()
     start_ts = models.DateTimeField()
     end_ts = models.DateTimeField()
     status = models.BooleanField(default=False)

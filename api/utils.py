@@ -1,8 +1,12 @@
+import json
 import os
 import subprocess
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 import re
+
+from api.models import Result, Target
 
 # 加载 .env 文件中的配置
 load_dotenv()
@@ -40,7 +44,7 @@ def error_response(message, error=None, **data):
 def execute_docker_compose_archivebox_command(command_args):
     """执行 Docker Compose ArchiveBox 命令并处理异常"""
     project_dir = os.getenv('PROJECT_DIR')
-    command = f"docker compose run archivebox {command_args}"
+    command = f"docker compose run --rm archivebox {command_args}"
     try:
         result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, encoding='utf-8',
                                 stderr=subprocess.PIPE, text=True, cwd=project_dir)
@@ -114,3 +118,33 @@ def parse_log(log_text, total_links):
 
 def clean_path(path):
     return os.path.normpath(path).replace("\\", "/").replace("/./", "/")
+
+
+def get_domain(url):
+    parsed_url = urlparse(url)
+    domain = parsed_url.netloc
+    return domain
+
+
+def save_result(index_file):
+    with open(index_file, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    url = data.get('url')
+    timestamp = data.get('timestamp')
+    t, _ = Target.objects.get_or_create(url=url,defaults={
+        'timestamp': timestamp,
+        'domain': get_domain(url)
+    })
+
+    for key, value in data.get('history').items():
+        Result.objects.create(
+            timestamp=timestamp,
+            start_ts=value[0].get('start_ts'),
+            end_ts=value[0].get('end_ts'),
+            status=True if value[0].get('status') == "succeeded" else False,
+            output=value[0].get('output'),
+            target_id=t,
+            extractor=key
+        )
+
+    return t

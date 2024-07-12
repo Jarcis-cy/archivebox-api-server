@@ -6,7 +6,7 @@ import yaml
 from rest_framework import status
 
 from api.utils import check_docker_version, check_docker_compose, execute_docker_compose_archivebox_command, \
-    success_response, error_response, parse_log, clean_path, partial_success_response
+    success_response, error_response, parse_log, clean_path, partial_success_response, save_result
 
 
 def initialize_archivebox():
@@ -135,9 +135,10 @@ def add_url(urls, tag, depth, update, update_all, overwrite, extractors, parser)
             crawl_status[url] = 'failed'
             continue
 
+        save_result(index_file)
+
         with open(index_file, 'r', encoding='utf-8') as f:
             index_data = json.load(f)
-
         history = index_data.get('history', {})
         if not history:
             crawl_status[url] = 'failed'
