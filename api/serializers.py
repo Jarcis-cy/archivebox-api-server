@@ -11,29 +11,29 @@ class AddUrlsSerializer(serializers.Serializer):
     tag = serializers.ListField(
         child=serializers.CharField(max_length=100),
         required=False,
-        help_text="为添加的 URL 打上标签。例如：--tag=tag1,tag2,tag3"
+        help_text="为添加的 URL 打上标签。"
     )
     depth = serializers.IntegerField(
         default=0,
         required=False,
-        help_text="递归存档所有链接页面，深度为 0 或 1。例如：--depth=0",
+        help_text="递归存档所有链接页面，深度为 0 或 1。",
         min_value=0,
         max_value=1
     )
     update = serializers.BooleanField(
         default=False,
         required=False,
-        help_text="在添加新链接时重试之前跳过/失败的链接。例如：--update"
+        help_text="在添加新链接时重试之前跳过/失败的链接。"
     )
     update_all = serializers.BooleanField(
         default=False,
         required=False,
-        help_text="在完成添加新链接后，更新索引中的所有链接。例如：--update-all"
+        help_text="在完成添加新链接后，更新索引中的所有链接。"
     )
     overwrite = serializers.BooleanField(
         default=False,
         required=False,
-        help_text="从头开始重新存档 URL，覆盖任何现有文件。例如：--overwrite"
+        help_text="从头开始重新存档 URL，覆盖任何现有文件。"
     )
     extractors = serializers.ListField(
         child=serializers.ChoiceField(choices=[
@@ -48,7 +48,7 @@ class AddUrlsSerializer(serializers.Serializer):
             choices=['auto', 'pocket_api', 'readwise_reader_api', 'wallabag_atom', 'pocket_html', 'pinboard_rss',
                      'shaarli_rss', 'medium_rss', 'netscape_html', 'rss', 'json', 'jsonl', 'html', 'txt', 'url_list']),
         required=False,
-        help_text="用于读取输入 URL 的解析器。例如：--parser=auto",
+        help_text="用于读取输入 URL 的解析器。",
     )
 
     def validate_extractors(self, value):

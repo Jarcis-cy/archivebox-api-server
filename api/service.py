@@ -115,7 +115,6 @@ def add_url(urls, tag, depth, update, update_all, overwrite, extractors, parser)
     log_text = result["stdout"]
 
     # 解析日志并获取存储路径
-    print(log_text)
     archive_paths = parse_log(log_text, urls)
 
     # 获取 PROJECT_DIR
@@ -167,7 +166,8 @@ def add_url(urls, tag, depth, update, update_all, overwrite, extractors, parser)
     failed_urls = [url for url in urls if crawl_status.get(url) == 'failed']
 
     if success_urls and failed_urls:
-        return partial_success_response("URLs processed with some failures.", archive_paths=success_urls, failed_urls=failed_urls)
+        return partial_success_response("URLs processed with some failures.", archive_paths=success_urls,
+                                        failed_urls=failed_urls)
     elif success_urls:
         return success_response("All URLs processed successfully.", archive_paths=success_urls)
     else:
