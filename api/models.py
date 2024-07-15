@@ -33,7 +33,7 @@ class Tag(BaseModel):
     name = models.CharField(max_length=50)
 
 
-class TargetTag(BaseModel):
+class Tagging(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tag_id = models.ForeignKey(Tag, on_delete=models.CASCADE)
     target_id = models.ForeignKey(Target, on_delete=models.CASCADE)

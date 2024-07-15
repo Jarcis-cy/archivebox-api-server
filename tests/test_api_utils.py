@@ -1,4 +1,11 @@
+import os
 import unittest
+
+import django
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'archivebox_api_server.settings')
+django.setup()
+
 from api.utils import parse_log
 
 
@@ -71,106 +78,6 @@ class FormatOutputTest(unittest.TestCase):
     - 0 links skipped
     - 2 links updated
     - 0 links had errors
-
-    Hint: To manage your archive in a Web UI, run:
-        archivebox server 0.0.0.0:8000
-"""
-
-        self.single_target_failure = """
-[i] [2024-07-04 04:09:39] ArchiveBox v0.7.2: archivebox add --depth=1 https://asdjfhkawkisejuhdfcvhbiuewsa.com/ --extract pdf,title,screenshot
-    > /data
-
-[+] [2024-07-04 04:09:40] Adding 1 links to index (crawl depth=1)...
-    > Saved verbatim input to sources/1720066180-import.txt
-    > Parsed 1 URLs from input (Generic TXT)
-
-[*] Starting crawl of 1 sites 1 hop out from starting point
-    > Downloading https://asdjfhkawkisejuhdfcvhbiuewsa.com/ contents
-[!] Failed to download https://asdjfhkawkisejuhdfcvhbiuewsa.com/
-
-     HTTPSConnectionPool(host='asdjfhkawkisejuhdfcvhbiuewsa.com', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f2e349e5110>: Failed to resolve 'asdjfhkawkisejuhdfcvhbiuewsa.com' ([Errno -2] Name or service not known)"))
-[!] Failed to get contents of URL {new_link.url} HTTPSConnectionPool(host='asdjfhkawkisejuhdfcvhbiuewsa.com', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f2e349e5110>: Failed to resolve 'asdjfhkawkisejuhdfcvhbiuewsa.com' ([Errno -2] Name or service not known)"))
-    > Found 1 new URLs not already in index
-
-[*] [2024-07-04 04:09:41] Writing 1 links to main index...
-    √ ./index.sqlite3
-
-[*] [2024-07-04 04:09:41] Archiving 1/4 URLs from added set...
-
-[▶] [2024-07-04 04:09:41] Starting archiving of 1 snapshots in index...
-
-[+] [2024-07-04 04:09:41] "asdjfhkawkisejuhdfcvhbiuewsa.com"
-    https://asdjfhkawkisejuhdfcvhbiuewsa.com/
-    > ./archive/1720066180.764635
-      > pdf
-      > screenshot
-      > title
-        Extractor failed:
-            ConnectionError HTTPSConnectionPool(host='asdjfhkawkisejuhdfcvhbiuewsa.com', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f2e34732cd0>: Failed to resolve 'asdjfhkawkisejuhdfcvhbiuewsa.com' ([Errno -2] Name or service not known)"))
-        Run to see full output:
-          docker run -it -v $PWD/data:/data archivebox/archivebox /bin/bash
-            cd /data/archive/1720066180.764635;
-            curl --silent --location --compressed --max-time 60 --user-agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36 ArchiveBox/0.7.2 (+https://github.com/ArchiveBox/ArchiveBox/) curl/curl 8.5.0 (x86_64-pc-linux-gnu)" "https://asdjfhkawkisejuhdfcvhbiuewsa.com/"
-
-        4 files (303.9 KB) in 0:00:01s
-
-[√] [2024-07-04 04:09:43] Update of 1 pages complete (2.02 sec)
-    - 0 links skipped
-    - 1 links updated
-    - 1 links had errors
-
-    Hint: To manage your archive in a Web UI, run:
-        archivebox server 0.0.0.0:8000
-"""
-
-        self.multiple_targets_failure = """
-[i] [2024-07-04 06:31:23] ArchiveBox v0.7.2: archivebox add --depth=0 https://sfdgcxsecurityasdfawefwAed.com/ https://afwegithubasdfasdfs.com/ --extract title,screenshot
-    > /data
-
-[+] [2024-07-04 06:31:24] Adding 2 links to index (crawl depth=0)...
-    > Saved verbatim input to sources/1720074684-import.txt
-    > Parsed 2 URLs from input (Generic TXT)
-    > Found 2 new URLs not already in index
-
-[*] [2024-07-04 06:31:24] Writing 2 links to main index...
-    √ ./index.sqlite3
-
-[*] [2024-07-04 06:31:24] Archiving 2/9 URLs from added set...
-
-[▶] [2024-07-04 06:31:24] Starting archiving of 2 snapshots in index...
-
-[+] [2024-07-04 06:31:24] "sfdgcxsecurityasdfawefwAed.com"
-    https://sfdgcxsecurityasdfawefwAed.com/
-    > ./archive/1720074684.657112
-      > screenshot
-      > title
-        Extractor failed:
-            ConnectionError HTTPSConnectionPool(host='sfdgcxsecurityasdfawefwaed.com', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7fae3bef1c10>: Failed to resolve 'sfdgcxsecurityasdfawefwaed.com' ([Errno -2] Name or service not known)"))
-        Run to see full output:
-          docker run -it -v $PWD/data:/data archivebox/archivebox /bin/bash
-            cd /data/archive/1720074684.657112;
-            curl --silent --location --compressed --max-time 60 --user-agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36 ArchiveBox/0.7.2 (+https://github.com/ArchiveBox/ArchiveBox/) curl/curl 8.5.0 (x86_64-pc-linux-gnu)" "https://sfdgcxsecurityasdfawefwAed.com/"
-
-        3 files (279.6 KB) in 0:00:01s
-
-[+] [2024-07-04 06:31:26] "afwegithubasdfasdfs.com"
-    https://afwegithubasdfasdfs.com/
-    > ./archive/1720074684.657393
-      > screenshot
-      > title
-        Extractor failed:
-            ConnectionError HTTPSConnectionPool(host='afwegithubasdfasdfs.com', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7fae3bc9c710>: Failed to resolve 'afwegithubasdfasdfs.com' ([Errno -2] Name or service not known)"))
-        Run to see full output:
-          docker run -it -v $PWD/data:/data archivebox/archivebox /bin/bash
-            cd /data/archive/1720074684.657393;
-            curl --silent --location --compressed --max-time 60 --user-agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36 ArchiveBox/0.7.2 (+https://github.com/ArchiveBox/ArchiveBox/) curl/curl 8.5.0 (x86_64-pc-linux-gnu)" "https://afwegithubasdfasdfs.com/"
-
-        3 files (273.4 KB) in 0:00:01s
-
-[√] [2024-07-04 06:31:27] Update of 2 pages complete (2.61 sec)
-    - 0 links skipped
-    - 2 links updated
-    - 2 links had errors
 
     Hint: To manage your archive in a Web UI, run:
         archivebox server 0.0.0.0:8000

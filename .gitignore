@@ -11,6 +11,7 @@ __pycache__/
 # 静态文件
 staticfiles/
 media/
+archivebox_data/
 
 # 本地配置文件
 local_settings.py
