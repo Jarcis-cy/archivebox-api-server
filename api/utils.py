@@ -88,6 +88,7 @@ def extract_archive_path(log_segment: str) -> str:
 def parse_log(log_text: str, total_links: List[str]) -> List[Dict[str, str]]:
     stripped_links = [remove_protocol(link) for link in total_links]
     result = []
+    print(log_text)
 
     for link in stripped_links:
         pattern = re.compile(r'\[\+] .*?"{}"\s+(https?://\S+)'.format(re.escape(link)))
@@ -118,12 +119,7 @@ def save_result(index_file):
 
     url = data.get('url')
     timestamp = data.get('timestamp')
-
-    # 将 timestamp 转换为东八区时间
-    utc_time = datetime.fromisoformat(timestamp)
-    beijing_tz = pytz.timezone('Asia/Shanghai')
-    beijing_time = utc_time.astimezone(beijing_tz)
-    timestamp = beijing_time.strftime('%Y-%m-%d %H:%M:%S.%f')
+    shanghai_tz = pytz.timezone('Asia/Shanghai')
 
     t, _ = Target.objects.get_or_create(url=url, defaults={
         'timestamp': timestamp,
@@ -137,12 +133,12 @@ def save_result(index_file):
         # 转换 start_ts 和 end_ts 为东八区时间
         if start_ts:
             utc_start_ts = datetime.fromisoformat(start_ts)
-            beijing_start_ts = utc_start_ts.astimezone(beijing_tz)
+            beijing_start_ts = utc_start_ts.astimezone(shanghai_tz)
             start_ts = beijing_start_ts.strftime('%Y-%m-%d %H:%M:%S.%f')
 
         if end_ts:
             utc_end_ts = datetime.fromisoformat(end_ts)
-            beijing_end_ts = utc_end_ts.astimezone(beijing_tz)
+            beijing_end_ts = utc_end_ts.astimezone(shanghai_tz)
             end_ts = beijing_end_ts.strftime('%Y-%m-%d %H:%M:%S.%f')
 
         Result.objects.create(
