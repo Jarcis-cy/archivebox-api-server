@@ -129,11 +129,22 @@ class FormatOutputTest(unittest.TestCase):
         archivebox server 0.0.0.0:8000
 """
 
+        self.already_exists_targets = """
+[+] [2024-07-16 08:56:13] Adding 2 links to index (crawl depth=0)...
+    > Saved verbatim input to sources/1721120173-import.txt
+    > Parsed 2 URLs from input (Generic TXT)
+    > Found 0 new URLs not already in index
+
+[*] [2024-07-16 08:56:13] Writing 0 links to main index...
+
+    √ ./index.sqlite3
+    """
+
     def test_single_target_success(self):
         targets = ["https://www.baidu.com/"]
         expected_output = [{'url': 'https://www.baidu.com/', 'archive_path': './archive/1720073769.137125'}]
         result = parse_log(self.single_target_success, targets)
-        self.assertListEqual(result, expected_output)
+        self.assertListEqual(result['data'], expected_output)
 
     def test_multiple_targets_success(self):
         targets = ["https://cxsecurity.com/cveshow/CVE-2022-34593/", "https://github.com/Liyou-ZY/POC/issues/1"]
@@ -142,7 +153,7 @@ class FormatOutputTest(unittest.TestCase):
             {'url': 'https://github.com/Liyou-ZY/POC/issues/1', 'archive_path': './archive/1720074402.409769'}
         ]
         result = parse_log(self.multiple_targets_success, targets)
-        self.assertListEqual(result, expected_output)
+        self.assertListEqual(result['data'], expected_output)
 
     def test_mixed_targets(self):
         targets = ["https://docs.xray.cool", "https://asedfawecdwsac.caedws"]
@@ -150,4 +161,9 @@ class FormatOutputTest(unittest.TestCase):
             {'url': 'https://docs.xray.cool', 'archive_path': './archive/1720075521.41685'},
             {'url': 'https://asedfawecdwsac.caedws', 'archive_path': './archive/1720075521.417146'}
         ]
-        self.assertListEqual(parse_log(self.mixed_targets, targets), expected_output)
+        self.assertListEqual(parse_log(self.mixed_targets, targets)['data'], expected_output)
+
+    def test_already_exists_success(self):
+        targets = ["https://docs.xray.cool", "https://asedfawecdwsac.caedws"]
+        self.assertEqual(parse_log(self.already_exists_targets, targets)['message'],
+                         "The requested target already exists. If you want to update it, please add the update parameter.")

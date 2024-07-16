@@ -86,11 +86,13 @@ def add_url(urls: List[str], tags: List[str], depth: int, update: bool, update_a
         return result
 
     log_text = result["stdout"]
-    archive_paths = parse_log(log_text, urls)
+    archive_result = parse_log(log_text, urls)
+    if archive_result["status"] == "error":
+        return archive_result
 
     project_dir = os.getenv('PROJECT_DIR')
     data_dir = os.path.join(project_dir, "data")
 
-    url_archive_paths, crawl_status = process_archive_paths(archive_paths, data_dir, tags)
+    url_archive_paths, crawl_status = process_archive_paths(archive_result["data"], data_dir, tags)
 
     return build_response(urls, url_archive_paths, crawl_status)

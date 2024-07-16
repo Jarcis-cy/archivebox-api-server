@@ -38,6 +38,14 @@ def build_simple_response(status: str, message: str, error: Exception = None, **
     return response
 
 
+def clean_path(path: str) -> str:
+    return os.path.normpath(path).replace("\\", "/").replace("/./", "/")
+
+
+def get_domain(url: str) -> str:
+    return urlparse(url).netloc
+
+
 def execute_docker_compose_archivebox_command(command_args: str) -> Dict[str, Any]:
     """执行 Docker Compose ArchiveBox 命令并处理异常"""
     project_dir = os.getenv('PROJECT_DIR')
@@ -85,10 +93,9 @@ def extract_archive_path(log_segment: str) -> str:
     return match.group(1) if match else None
 
 
-def parse_log(log_text: str, total_links: List[str]) -> List[Dict[str, str]]:
+def parse_log(log_text: str, total_links: List[str]) -> Dict[str, Any]:
     stripped_links = [remove_protocol(link) for link in total_links]
     result = []
-    print(log_text)
 
     for link in stripped_links:
         pattern = re.compile(r'\[\+] .*?"{}"\s+(https?://\S+)'.format(re.escape(link)))
@@ -101,16 +108,12 @@ def parse_log(log_text: str, total_links: List[str]) -> List[Dict[str, str]]:
         else:
             archive_path = None
         result.append({'url': total_links[stripped_links.index(link)], 'archive_path': archive_path})
-    return result
 
+    if not any(entry['archive_path'] for entry in result):
+        return error_response(
+            "The requested target already exists. If you want to update it, please add the update parameter.")
 
-def clean_path(path: str) -> str:
-    return os.path.normpath(path).replace("\\", "/").replace("/./", "/")
-
-
-def get_domain(url: str) -> str:
-    parsed_url = urlparse(url)
-    return parsed_url.netloc
+    return success_response("Log parsed successfully.", data=result)
 
 
 def save_result(index_file):
@@ -152,6 +155,7 @@ def save_result(index_file):
         )
 
     return t
+
 
 def save_tags(url: str, tags: List[str]) -> bool:
     target = Target.objects.get(url=url)
