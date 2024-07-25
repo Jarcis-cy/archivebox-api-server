@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from api.models import Result, Target, Tag, Tagging
+
 
 class AddUrlsSerializer(serializers.Serializer):
     urls = serializers.ListField(
@@ -51,13 +53,93 @@ class AddUrlsSerializer(serializers.Serializer):
         help_text="用于读取输入 URL 的解析器。",
     )
 
-    def validate_extractors(self, value):
+    @staticmethod
+    def validate_extractors(value):
         if value:
             return ",".join(value)
         return ""
 
-    def validate_parser(self, value):
+    @staticmethod
+    def validate_parser(value):
         if value:
             return ",".join(value)
         return ""
 
+
+class ResultSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Result
+        fields = ['timestamp', 'status', 'output', 'extractor']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.status:
+            return {
+                'timestamp': representation['timestamp'],
+                'status': representation['status'],
+                'output': representation['output'],
+                'extractor': representation['extractor']
+            }
+        else:
+            return {
+                'status': representation['status'],
+                'timestamp': representation['timestamp'],
+                'extractor': representation['extractor']
+            }
+
+
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ['name']
+
+
+class TargetSerializer(serializers.ModelSerializer):
+    results = serializers.SerializerMethodField()
+    tags = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Target
+        fields = ['url', 'domain', 'results', 'tags']
+
+    def get_results(self, obj):
+        results = Result.objects.filter(target_id=obj.id).order_by('-timestamp')
+        sorted_results = sorted(
+            results,
+            key=lambda x: (not x.status, -x.timestamp)
+        )
+        extractors = self.context.get('extractors', [])
+        if extractors:
+            sorted_results = [result for result in sorted_results if result.extractor in extractors]
+        return ResultSerializer(sorted_results, many=True).data
+
+    @staticmethod
+    def get_tags(obj):
+        taggings = Tagging.objects.filter(target_id=obj.id).select_related('tag_id')
+        return [tagging.tag_id.name for tagging in taggings]
+
+
+class FilterTargetsSerializer(serializers.Serializer):
+    tag_names = serializers.ListField(
+        child=serializers.CharField(max_length=100),
+        required=False,
+        help_text="用于筛选目标的标签名称列表。"
+    )
+    domains = serializers.ListField(
+        child=serializers.CharField(max_length=100),
+        required=False,
+        help_text="用于筛选目标的域名列表。"
+    )
+    urls = serializers.ListField(
+        child=serializers.CharField(max_length=2000),
+        required=False,
+        help_text="用于筛选目标的URL列表。"
+    )
+    extractors = serializers.ListField(
+        child=serializers.ChoiceField(choices=[
+            "title", "screenshot", "git", "favicon", "headers", "singlefile", "pdf", "dom", "wget", "readability",
+            "mercury", "htmltotext", "media", "archive_org"
+        ]),
+        required=False,
+        help_text="用于筛选提取器。"
+    )

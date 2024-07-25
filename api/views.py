@@ -4,8 +4,10 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from . import service
-from .serializers import AddUrlsSerializer
+from .serializers import AddUrlsSerializer, FilterTargetsSerializer
 from drf_yasg.utils import swagger_auto_schema
+
+from .service import filter_targets
 
 
 @api_view(['GET'])
@@ -63,3 +65,24 @@ def synchronization(request):
     else:
         return Response({'status': 'error', 'message': 'Invalid request method'},
                         status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+@swagger_auto_schema(method='post', request_body=FilterTargetsSerializer)
+@api_view(['POST'])
+def list_target(request):
+    if request.method == 'POST':
+        serializer = FilterTargetsSerializer(data=request.data)
+        if serializer.is_valid():
+            data = serializer.validated_data
+            result = filter_targets(data)
+
+            if result["status"] == "success":
+                return Response(result, status=status.HTTP_200_OK)
+            elif result["status"] == "partial_success":
+                return Response(result, status=status.HTTP_206_PARTIAL_CONTENT)
+            else:
+                return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({'status': 'error', 'message': 'Invalid request method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)

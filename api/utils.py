@@ -147,7 +147,7 @@ def process_json_data(index_file: str) -> Dict[str, Any]:
             'start_ts': start_ts,
             'end_ts': end_ts,
             'status': True if value[0].get('status') == "succeeded" else False,
-            'output': value[0].get('output')
+            'output': f"/static/archive/{timestamp}/{value[0].get('output')}"
         }
 
     return {

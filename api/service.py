@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 import requests
 import yaml
 
+from api.models import Target, Tag, Tagging
+from api.serializers import TargetSerializer
 from api.utils import check_docker_version, check_docker_compose, execute_docker_compose_archivebox_command, \
     success_response, error_response, parse_log, clean_path, partial_success_response, save_result, save_tags, \
     build_add_args, process_archive_paths, build_response, process_json_data
@@ -120,3 +122,29 @@ def synchronize_local_data() -> dict[str, Any]:
                 save_result(data)
 
     return success_response("Synchronization successful!")
+
+
+def filter_targets(data: Dict[str, Any]) -> Dict[str, Any]:
+    try:
+        tag_names = data.get('tag_names', [])
+        domains = data.get('domains', [])
+        urls = data.get('urls', [])
+        extractors = data.get('extractors', [])
+
+        targets = Target.objects.all()
+
+        if tag_names:
+            tags = Tag.objects.filter(name__in=tag_names)
+            taggings = Tagging.objects.filter(tag_id__in=tags)
+            targets = targets.filter(id__in=taggings.values('target_id'))
+
+        if domains:
+            targets = targets.filter(domain__in=domains)
+
+        if urls:
+            targets = targets.filter(url__in=urls)
+
+        serialized_targets = TargetSerializer(targets, many=True, context={'extractors': extractors}).data
+        return success_response("Targets fetched successfully", targets=serialized_targets)
+    except Exception as e:
+        return error_response("An error occurred while fetching targets", error=e)
