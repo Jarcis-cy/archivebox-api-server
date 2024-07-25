@@ -2,14 +2,16 @@ import json
 import os
 import subprocess
 from typing import List, Dict, Any
+from dotenv import load_dotenv
 
 import requests
 import yaml
-from rest_framework import status
 
 from api.utils import check_docker_version, check_docker_compose, execute_docker_compose_archivebox_command, \
     success_response, error_response, parse_log, clean_path, partial_success_response, save_result, save_tags, \
     build_add_args, process_archive_paths, build_response
+
+load_dotenv()
 
 
 def initialize_archivebox() -> Dict[str, Any]:
@@ -78,7 +80,8 @@ def initialize_archivebox() -> Dict[str, Any]:
         return error_response(f"Failed to start ArchiveBox server: {e}", error=e)
 
 
-def add_url(urls: List[str], tags: List[str], depth: int, update: bool, update_all: bool, overwrite: bool, extractors: str, parser: str) -> Dict[str, Any]:
+def add_url(urls: List[str], tags: List[str], depth: int, update: bool, update_all: bool, overwrite: bool,
+            extractors: str, parser: str) -> Dict[str, Any]:
     command_args = build_add_args(urls, tags, depth, update, update_all, overwrite, extractors, parser)
 
     result = execute_docker_compose_archivebox_command(command_args)
@@ -96,3 +99,7 @@ def add_url(urls: List[str], tags: List[str], depth: int, update: bool, update_a
     url_archive_paths, crawl_status = process_archive_paths(archive_result["data"], data_dir, tags)
 
     return build_response(urls, url_archive_paths, crawl_status)
+
+
+def synchronize_local_data():
+    project_dir = os.getenv('PROJECT_DIR')

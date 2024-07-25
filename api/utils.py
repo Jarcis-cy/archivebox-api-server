@@ -116,24 +116,21 @@ def parse_log(log_text: str, total_links: List[str]) -> Dict[str, Any]:
     return success_response("Log parsed successfully.", data=result)
 
 
-def save_result(index_file):
+def process_json_data(index_file: str) -> Dict[str, Any]:
     with open(index_file, 'r', encoding='utf-8') as f:
         data = json.load(f)
 
     url = data.get('url')
     timestamp = data.get('timestamp')
+    history = data.get('history', {})
     shanghai_tz = pytz.timezone('Asia/Shanghai')
 
-    t, _ = Target.objects.get_or_create(url=url, defaults={
-        'timestamp': timestamp,
-        'domain': get_domain(url)
-    })
+    processed_history = {}
 
-    for key, value in data.get('history').items():
+    for key, value in history.items():
         start_ts = value[0].get('start_ts')
         end_ts = value[0].get('end_ts')
 
-        # 转换 start_ts 和 end_ts 为东八区时间
         if start_ts:
             utc_start_ts = datetime.fromisoformat(start_ts)
             beijing_start_ts = utc_start_ts.astimezone(shanghai_tz)
@@ -144,12 +141,42 @@ def save_result(index_file):
             beijing_end_ts = utc_end_ts.astimezone(shanghai_tz)
             end_ts = beijing_end_ts.strftime('%Y-%m-%d %H:%M:%S.%f')
 
+        processed_history[key] = {
+            'start_ts': start_ts,
+            'end_ts': end_ts,
+            'status': True if value[0].get('status') == "succeeded" else False,
+            'output': value[0].get('output')
+        }
+
+    return {
+        'url': url,
+        'timestamp': timestamp,
+        'history': processed_history
+    }
+
+
+def save_result(index_file: str) -> Any:
+    data = process_json_data(index_file)
+
+    url = data['url']
+    timestamp = data['timestamp']
+    history = data['history']
+
+    t, _ = Target.objects.get_or_create(url=url, defaults={
+        'timestamp': timestamp,
+        'domain': get_domain(url)
+    })
+
+    for key, value in history.items():
+        start_ts = value.get('start_ts')
+        end_ts = value.get('end_ts')
+
         Result.objects.create(
             timestamp=timestamp,
             start_ts=start_ts,
             end_ts=end_ts,
-            status=True if value[0].get('status') == "succeeded" else False,
-            output=value[0].get('output'),
+            status=value.get('status'),
+            output=value.get('output'),
             target_id=t,
             extractor=key
         )
