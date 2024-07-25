@@ -1,7 +1,7 @@
 import json
 import os
 import subprocess
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Union
 from dotenv import load_dotenv
 
 import requests
@@ -9,7 +9,7 @@ import yaml
 
 from api.utils import check_docker_version, check_docker_compose, execute_docker_compose_archivebox_command, \
     success_response, error_response, parse_log, clean_path, partial_success_response, save_result, save_tags, \
-    build_add_args, process_archive_paths, build_response
+    build_add_args, process_archive_paths, build_response, process_json_data
 
 load_dotenv()
 
@@ -101,5 +101,22 @@ def add_url(urls: List[str], tags: List[str], depth: int, update: bool, update_a
     return build_response(urls, url_archive_paths, crawl_status)
 
 
-def synchronize_local_data():
-    project_dir = os.getenv('PROJECT_DIR')
+def synchronize_local_data() -> dict[str, Any]:
+    project_dir: str = os.getenv('PROJECT_DIR')
+    if not project_dir:
+        return error_response("PROJECT_DIR environment variable not set.")
+
+    archive_dir: str = os.path.join(project_dir, "data", "archive")
+
+    if not os.path.exists(archive_dir):
+        return error_response(f"{archive_dir} does not exist.")
+
+    for folder_name in os.listdir(archive_dir):
+        folder_path: str = os.path.join(archive_dir, folder_name)
+        if os.path.isdir(folder_path):
+            index_file_path: str = os.path.join(folder_path, 'index.json')
+            if os.path.exists(index_file_path):
+                data: dict = process_json_data(index_file_path)
+                save_result(data)
+
+    return success_response("Synchronization successful!")

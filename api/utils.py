@@ -128,6 +128,8 @@ def process_json_data(index_file: str) -> Dict[str, Any]:
     processed_history = {}
 
     for key, value in history.items():
+        if len(value) == 0:
+            continue
         start_ts = value[0].get('start_ts')
         end_ts = value[0].get('end_ts')
 
@@ -155,8 +157,7 @@ def process_json_data(index_file: str) -> Dict[str, Any]:
     }
 
 
-def save_result(index_file: str) -> Any:
-    data = process_json_data(index_file)
+def save_result(data: Dict[str, Any]) -> Any:
 
     url = data['url']
     timestamp = data['timestamp']
@@ -171,14 +172,13 @@ def save_result(index_file: str) -> Any:
         start_ts = value.get('start_ts')
         end_ts = value.get('end_ts')
 
-        Result.objects.create(
-            timestamp=timestamp,
-            start_ts=start_ts,
-            end_ts=end_ts,
-            status=value.get('status'),
-            output=value.get('output'),
-            target_id=t,
-            extractor=key
+        Result.objects.get_or_create(
+            timestamp=timestamp, target_id=t, extractor=key, defaults={
+                'start_ts': start_ts,
+                'end_ts': end_ts,
+                'status': value.get('status'),
+                'output': value.get('output'),
+            }
         )
 
     return t
@@ -234,8 +234,8 @@ def process_archive_paths(archive_paths: List[Dict[str, Any]], data_dir: str, ta
         if not os.path.exists(index_file):
             crawl_status[url] = 'failed'
             continue
-
-        save_result(index_file)
+        data = process_json_data(index_file)
+        save_result(data)
 
         if tags:
             save_tags(url, tags)

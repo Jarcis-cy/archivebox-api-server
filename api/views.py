@@ -49,3 +49,17 @@ def add_urls(request):
     else:
         return Response({'status': 'error', 'message': 'Invalid request method'},
                         status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+@api_view(['GET'])
+def synchronization(request):
+    if request.method == 'GET':
+        result = service.synchronize_local_data()
+
+        if result["status"] == "success":
+            return Response(result, status=status.HTTP_200_OK)
+        else:
+            return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return Response({'status': 'error', 'message': 'Invalid request method'},
+                        status=status.HTTP_405_METHOD_NOT_ALLOWED)
