@@ -1,3 +1,4 @@
+from drf_yasg import openapi
 from rest_framework import serializers
 
 from api.models import Result, Target, Tag, Tagging
@@ -143,3 +144,40 @@ class FilterTargetsSerializer(serializers.Serializer):
         required=False,
         help_text="用于筛选提取器。"
     )
+
+
+# 定义基础响应序列化器
+class BaseResponseSerializer(serializers.Serializer):
+    status = serializers.CharField()
+    message = serializers.CharField()
+
+
+# 定义成功响应序列化器
+class SuccessResponseSerializer(BaseResponseSerializer):
+    data = serializers.JSONField()
+
+
+# 定义部分成功响应序列化器
+class PartialSuccessResponseSerializer(BaseResponseSerializer):
+    data = serializers.JSONField()
+
+
+# 定义错误响应序列化器
+class ErrorResponseSerializer(BaseResponseSerializer):
+    error = serializers.CharField(required=False, allow_null=True)
+
+
+common_responses = {
+    200: openapi.Response(
+        description="成功返回的响应结构",
+        schema=SuccessResponseSerializer()
+    ),
+    207: openapi.Response(
+        description="部分成功返回的响应结构",
+        schema=PartialSuccessResponseSerializer()
+    ),
+    400: openapi.Response(
+        description="请求出错",
+        schema=ErrorResponseSerializer()
+    )
+}

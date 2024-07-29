@@ -1,10 +1,12 @@
+from drf_yasg import openapi
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from rest_framework import status
 
 from . import service
-from .serializers import AddUrlsSerializer, FilterTargetsSerializer
+from .serializers import AddUrlsSerializer, FilterTargetsSerializer, SuccessResponseSerializer, \
+    PartialSuccessResponseSerializer, ErrorResponseSerializer, common_responses
 from drf_yasg.utils import swagger_auto_schema
 
 from .service import filter_targets
@@ -24,28 +26,24 @@ def init_project(request):
                         status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
-@swagger_auto_schema(method='post', request_body=AddUrlsSerializer)
+@swagger_auto_schema(method='post', request_body=AddUrlsSerializer, responses=common_responses)
 @api_view(['POST'])
 def add_urls(request):
     if request.method == 'POST':
         serializer = AddUrlsSerializer(data=request.data)
         if serializer.is_valid():
             data = serializer.validated_data
-            urls = data.get('urls')
-            tag = data.get('tag')
-            depth = data.get('depth', 0)
-            update = data.get('update', False)
-            update_all = data.get('update_all', False)
-            overwrite = data.get('overwrite', False)
-            extractors = data.get('extractors')
-            parser = data.get('parser', 'auto')
-
-            result = service.add_url(urls, tag, depth, update, update_all, overwrite, extractors, parser)
-
-            if result["status"] == "success":
-                return Response(result, status=status.HTTP_200_OK)
-            else:
-                return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            result = service.add_url(
+                data.get('urls'),
+                data.get('tag'),
+                data.get('depth', 0),
+                data.get('update', False),
+                data.get('update_all', False),
+                data.get('overwrite', False),
+                data.get('extractors'),
+                data.get('parser', 'auto')
+            )
+            return handle_response(result)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     else:
@@ -67,7 +65,7 @@ def synchronization(request):
                         status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
-@swagger_auto_schema(method='post', request_body=FilterTargetsSerializer)
+@swagger_auto_schema(method='post', request_body=FilterTargetsSerializer, responses=common_responses)
 @api_view(['POST'])
 def list_target(request):
     if request.method == 'POST':
@@ -75,14 +73,18 @@ def list_target(request):
         if serializer.is_valid():
             data = serializer.validated_data
             result = filter_targets(data)
-
-            if result["status"] == "success":
-                return Response(result, status=status.HTTP_200_OK)
-            elif result["status"] == "partial_success":
-                return Response(result, status=status.HTTP_206_PARTIAL_CONTENT)
-            else:
-                return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return handle_response(result)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     else:
-        return Response({'status': 'error', 'message': 'Invalid request method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return Response({'status': 'error', 'message': 'Invalid request method'},
+                        status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+def handle_response(result):
+    if result["status"] == "success":
+        return Response(result, status=status.HTTP_200_OK)
+    elif result["status"] == "partial_success":
+        return Response(result, status=status.HTTP_207_MULTI_STATUS)
+    else:
+        return Response(result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
