@@ -1,14 +1,14 @@
 # ArchiveBox-API-Server
 
-因为ArchiveBox本身的API存在一些Bug，使用起来也不便捷，故二开一个项目，通过api控制ArchiveBox
+由于 ArchiveBox 自带的 API 存在一些问题且使用不便，于是二次开发了一个项目，通过 API 控制 ArchiveBox。
 
 ## 实现方式
 
-通过docker compose拉取archivebox，然后使用docker compose命令调用使用
+通过 Docker Compose 拉取 ArchiveBox，并使用 Docker Compose 命令进行调用。
 
 ## 部署方式
 
-### 1. 安装docker
+### 1. 安装 Docker
 
 <details>
 <summary>在 Linux 上安装最新版 Docker</summary>
@@ -104,6 +104,7 @@ docker run hello-world
 
 ```bash
 # 克隆项目代码
+git clone <仓库地址>
 cd archivebox-api-server
 
 # 创建虚拟环境
@@ -133,14 +134,26 @@ python manage.py runserver
 
 ## 使用方式
 
-可以在启动服务器后，查看:
+服务器启动后，可以访问以下地址查看 API 文档:
 - `http://127.0.0.1:8000/swagger/`
 - `http://127.0.0.1:8000/redoc/`
 
-看文档描述即可
+目前实现了 init, add, list 三个功能。
 
-**需要先使用init，将指定版本的archivebox的容器启动起来，然后再进行后续操作**
+**需要先使用 init，将指定版本的 ArchiveBox 容器启动起来，然后再进行后续操作**
+
+### init
+
+执行 init 将会自动检查本地是否有合适的 Docker，并尝试拉取并创建 ArchiveBox 容器。
+
+### add
+
+可以将指定的 URL 添加到爬取任务中，目前暂未实现异步，后续会尝试异步执行。
+
+### list
+
+可以根据指定的过滤器展示快照。
 
 ## 注意
 
-本项目没有设置任何的认证相关的限制，仅作为便于使用的api server，如果部署在公网，务必使用nginx等设置访问白名单
+本项目没有设置任何的认证相关的限制，仅作为便于使用的 API Server。如果部署在公网，务必使用 Nginx 等设置访问白名单。
